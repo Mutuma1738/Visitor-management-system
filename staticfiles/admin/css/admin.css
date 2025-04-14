@@ -1,0 +1,75 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #e0e0e0; /* Light grey */
+    color: #002f6c; /* IRA Blue */
+}
+
+/* Header */
+.dashboard-header {
+    background-color: #002f6c; /* IRA Blue */
+    color: #ffffff;
+    padding: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 10px;
+}
+
+/* Statistics Cards */
+.stat-card {
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+}
+.total-visits { background-color: #002f6c; } /* IRA Blue */
+.total-visitors { background-color: #f4a900; } /* IRA Gold */
+.total-employees { background-color: #ffffff; color: #002f6c; border: 2px solid #002f6c; }
+.pending-visits { background-color: #dc3545; } /* Red for pending */
+
+/* Table */
+.table thead {
+    background-color: #002f6c; /* IRA Blue */
+    color: white;
+}
+.table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.table tbody tr:hover {
+    background-color: #f4a90030; /* Light gold hover */
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #002f6c;
+    border: none;
+}
+.btn-warning {
+    background-color: #f4a900;
+    border: none;
+    color: black;
+}
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+}
+
+/* Charts */
+.chart-container {
+    width: 300px;
+    height: 300px;
+    margin: auto;
+}
+
+/* Logo */
+.logo-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+.logo-container img {
+    height: 50px;
+}

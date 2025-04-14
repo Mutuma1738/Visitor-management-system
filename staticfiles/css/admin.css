@@ -1,0 +1,63 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Logo */
+.logo {
+    height: 60px;
+}
+
+/* Header */
+.dashboard-header {
+    font-size: 28px;
+    font-weight: bold;
+    color: #002f6c;
+}
+
+/* Statistics Cards */
+.stat-card {
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+}
+.total-visits { background-color: #002f6c; } /* Dark Blue */
+.total-visitors { background-color: #17a2b8; } /* Teal */
+.total-employees { background-color: #f4a900; } /* Gold */
+.pending-visits { background-color: #dc3545; } /* Red */
+
+/* Highlight */
+.highlight {
+    color: #f4a900;
+    font-weight: bold;
+}
+
+/* Tables */
+.table thead {
+    background-color: #002f6c;
+    color: white;
+}
+.table tbody tr:nth-child(even) {
+    background-color: #f1f1f1;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #002f6c;
+    border: none;
+}
+.btn-primary:hover {
+    background-color: #001d4d;
+}
+.btn-warning {
+    background-color: #f4a900;
+    border: none;
+}
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+}

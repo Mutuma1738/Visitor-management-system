@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>base template</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{%static 'css/style.css' %}">
+    <!-- <div class="logo-container">
+        <img src="{% static 'images/logo.png' %}" alt="Company Logo">
+    </div> -->
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block content %}
+    
+    {% endblock %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const purposeSelect = document.getElementById("purpose");
+            const employeeSelect = document.getElementById("employee");
+            const reasonContainer = document.getElementById("reason-container");
+            const officialReasonSelect = document.getElementById("official_reason");
+            const otherReasonContainer = document.getElementById("other-reason-container");
+            const otherReasonInput = document.getElementById("other_reason");
+    
+            // Show/hide Official Reason dropdown based on Purpose selection
+            purposeSelect.addEventListener("change", function () {
+                if (this.value === "Official") {
+                    reasonContainer.classList.remove("d-none");
+                    fetchOfficialReasons(employeeSelect.value); // Load reasons based on selected employee
+                } else {
+                    reasonContainer.classList.add("d-none");
+                    otherReasonContainer.classList.add("d-none");
+                }
+            });
+    
+            // Fetch reasons when employee is selected
+            employeeSelect.addEventListener("change", function () {
+                if (purposeSelect.value === "Official") {
+                    fetchOfficialReasons(this.value);
+                }
+            });
+    
+            // Show 'Other Reason' input field when "Other" is selected
+            officialReasonSelect.addEventListener("change", function () {
+                if (this.value === "Other") {
+                    otherReasonContainer.classList.remove("d-none");
+                } else {
+                    otherReasonContainer.classList.add("d-none");
+                    otherReasonInput.value = ""; // Clear the input field
+                }
+            });
+    
+            // Function to fetch reasons from the server
+            function fetchOfficialReasons(employeeId) {
+                fetch(`/get_department_reasons/?employee_id=${employeeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        officialReasonSelect.innerHTML = "<option value=''>Select a reason</option>";
+                        if (data.reasons) {
+                            data.reasons.forEach(reason => {
+                                let option = new Option(reason, reason);
+                                officialReasonSelect.add(option);
+                            });
+                            officialReasonSelect.add(new Option("Other", "Other")); // Add 'Other' option
+                        }
+                    })
+                    .catch(error => console.error("Error fetching reasons:", error));
+            }
+        });
+    </script>
+    <script src="{% static 'js/register.js' %}" defer></script>
+    <script src="{% static 'js/sweetalert.min.js' %}" defer></script>
+
+</body>
+</html>    

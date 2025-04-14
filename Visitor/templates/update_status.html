@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Visit Status</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const statusDropdown = document.getElementById("status");
+            const predefinedResponseDropdown = document.getElementById("predefined_response");
+            const commentTextarea = document.getElementById("comment");
+    
+            // Predefined responses JSON from Django
+            const predefinedResponses = {{ predefined_responses|safe }};
+    
+            function updatePredefinedResponses() {
+                const selectedStatus = statusDropdown.value;
+                const responses = predefinedResponses[selectedStatus] || [];
+    
+                // Clear dropdown
+                predefinedResponseDropdown.innerHTML = '<option value="">Select a predefined response</option>';
+                
+                // Populate dropdown
+                responses.forEach(response => {
+                    let option = document.createElement("option");
+                    option.value = response;
+                    option.textContent = response;
+                    predefinedResponseDropdown.appendChild(option);
+                });
+    
+                // Clear the comment field when status changes
+                commentTextarea.value = "";
+            }
+    
+            function updateComment() {
+                // Set the comment field when a predefined response is selected
+                commentTextarea.value = predefinedResponseDropdown.value;
+            }
+    
+            // Load predefined responses on page load
+            updatePredefinedResponses();
+    
+            // Event listeners
+            statusDropdown.addEventListener("change", updatePredefinedResponses);
+            predefinedResponseDropdown.addEventListener("change", updateComment);
+        });
+    </script>
+    
+    
+</head>
+<body>
+
+<div class="container">
+    <h1>Update Visit Status</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label for="status">Select Status:</label>
+        <select id="status" name="status">
+            <option value="Approved" {% if visit.status == "Approved" %}selected{% endif %}>Approve</option>
+            <option value="Declined" {% if visit.status == "Declined" %}selected{% endif %}>Decline</option>
+            <!-- <option value="Forwarded" {% if visit.status == "Forwarded" %}selected{% endif %}>Forward</option> -->
+        </select>
+
+        <label for="predefined_response">Predefined Responses:</label>
+        <select id="predefined_response" name="predefined_response">
+            <option value="">Select a predefined response</option>
+        </select>
+
+        <label for="comment">Comments:</label>
+        <textarea id="comment" name="comment" rows="4" required></textarea>
+
+        <!-- ✅ Show wait duration only if "Approved" 
+        <div id="wait-container" class="mt-2" style="display:none;">
+            <label for="wait_minutes">Delay entry by (minutes):</label>
+            <input type="number" name="wait_minutes" class="form-control" min="0" placeholder="Optional">
+        </div> -->
+        <button type="submit" class="btn btn-success mt-3">Submit</button>
+    </form>
+
+    {% if visit.status %}
+        <div class="status-message {{ visit.status|lower }}">
+            Current Status: {{ visit.status }} <br>
+            Comment: {{ visit.comments }}
+        </div>
+    {% endif %}
+</div>
+<script>
+    // Show/hide wait time input if Approved is selected
+    const statusSelect = document.getElementById("status");
+    const waitContainer = document.getElementById("wait-container");
+
+    statusSelect.addEventListener("change", () => {
+        if (statusSelect.value === "Approved") {
+            waitContainer.style.display = "block";
+        } else {
+            waitContainer.style.display = "none";
+        }
+    });
+
+    // Trigger on load in case form retains value
+    statusSelect.dispatchEvent(new Event("change"));
+</script>
+</body>
+</html>

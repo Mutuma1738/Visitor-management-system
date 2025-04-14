@@ -1,0 +1,12 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.admin-dashboard h1 {
+    color: #0056b3;
+}
+.admin-dashboard .card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}

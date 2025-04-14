@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="{% url 'forward_visit' visit.id %}" method="POST">
+    {% csrf_token %}
+
+    <label for="new_employee_id">Select Employee to Forward To:</label>
+    <select name="new_employee_id">
+        {% for employee in employees %}
+            <option value="{{ employee.id }}">{{ employee.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="comment">Comment:</label>
+    <textarea name="comment" required></textarea>
+
+    <button type="submit">Forward</button>
+</form>
+{% endblock %}

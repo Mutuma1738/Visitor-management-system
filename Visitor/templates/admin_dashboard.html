@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <!-- Favicon & Custom Styles -->
+  <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+</head>
+<body>
+
+  <!-- ✅ NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" height="40" class="me-2">
+        Admin Dashboard
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+        <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle active" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Employee Management
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="employeeDropdown">
+                    <li><a class="dropdown-item" href="{% url 'employee_list' %}">View Employees</a></li>
+                    <li><a class="dropdown-item" href="{% url 'add_employee' %}">Add Employee</a></li>
+                    {% for employee in employees %}
+                        <li><a class="dropdown-item" href="{% url 'employee_edit' employee.id %}">Edit {{ employee.name }}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'employee_delete' employee.id %}">Delete {{ employee.name }}</a></li>
+                    {% endfor %}                
+                </ul>
+              </li>
+                          <li class="nav-item"><a href="{% url 'logout' %}">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+    <div class="container mt-4">
+        <!-- Header 
+        <div class="d-flex align-items-center mb-3">
+            <img src="{% static 'images/logo.png' %}" alt="IRA Logo" class="logo" />
+            <h1 class="dashboard-header ms-3">Admin Dashboard</h1>
+        </div>-->
+
+        <!-- Filter Form -->
+        <h4 class="mb-3">Filter Visits</h4>
+        <p>Filter the visits by selecting a date range.</p>
+        <p>To view all visits, leave the date fields empty.</p>
+        <form method="get" class="mb-4 d-flex gap-3 flex-wrap">
+
+            <label>
+                Start Date:
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}" />
+            </label>
+            <label>
+                End Date:
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}" />
+            </label>
+            <button type="submit" class="btn btn-outline-primary">Filter</button>
+        </form>
+
+        <!-- Analytics Summary -->
+        <div class="row mt-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card total-visits">{{ total_visits }}<br />Total Visits</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card total-visitors">{{ total_visitors }}<br />Total Visitors</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card total-employees">{{ total_employees }}<br />Total Employees Visited</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card pending-visits">{{ pending_visits }}<br />Visitors Pending at Reception</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <h5>Visitor Trends (Last 30 Days)</h5>
+                <canvas id="visitorTrendsChart"></canvas>
+            </div>
+            <div class="col-md-6 mb-4">
+                <h5>Visit Purpose Breakdown</h5>
+                <canvas id="visitPurposeChart"></canvas>
+            </div>
+            <div class="col-md-6 mb-4">
+                <h5>Department-wise Visits</h5>
+                <canvas id="departmentVisitsChart"></canvas>
+            </div>
+            <div class="col-md-6 mb-4">
+                <h5>Approval vs. Rejections</h5>
+                <canvas id="approvalRejectionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Export Data -->
+        <h4 class="mt-4">Export Data</h4>
+
+        <form method="get" action="{% url 'export_visits_csv' %}" class="row g-2 mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" required />
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-success">Download CSV (Filtered)</button>
+            </div>
+        </form>
+
+        <form method="get" action="{% url 'export_visits_pdf' %}" class="row g-2 mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" required />
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-danger">Download PDF (Filtered)</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Charts Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            try {
+                const visitorTrendsLabels = JSON.parse(`{{ visitor_trend_labels|safe }}`);
+                const visitorTrendsData = JSON.parse(`{{ visitor_trend_data|safe }}`);
+                const visitPurposeLabels = JSON.parse(`{{ visit_purpose_labels|safe }}`);
+                const visitPurposeData = JSON.parse(`{{ visit_purpose_data|safe }}`);
+                const departmentLabels = JSON.parse(`{{ department_labels|safe }}`);
+                const departmentData = JSON.parse(`{{ department_data|safe }}`);
+                const approvalRejectionData = JSON.parse(`{{ approval_rejection_data|safe }}`);
+
+                if (visitorTrendsLabels.length > 0) {
+                    new Chart(document.getElementById('visitorTrendsChart'), {
+                        type: 'line',
+                        data: {
+                            labels: visitorTrendsLabels,
+                            datasets: [{
+                                label: 'Number of Visitors',
+                                data: visitorTrendsData,
+                                backgroundColor: 'rgba(0, 47, 108, 0.5)',
+                                borderColor: '#002f6c',
+                                borderWidth: 2,
+                                fill: true
+                            }]
+                        }
+                    });
+                }
+
+                if (visitPurposeLabels.length > 0) {
+                    new Chart(document.getElementById('visitPurposeChart'), {
+                        type: 'pie',
+                        data: {
+                            labels: visitPurposeLabels,
+                            datasets: [{
+                                data: visitPurposeData,
+                                backgroundColor: ['#002f6c', '#f4a900', '#dc3545', '#17a2b8', '#28a745']
+                            }]
+                        }
+                    });
+                }
+
+                if (departmentLabels.length > 0) {
+                    new Chart(document.getElementById('departmentVisitsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: departmentLabels,
+                            datasets: [{
+                                label: 'Visitors per Department',
+                                data: departmentData,
+                                backgroundColor: '#f4a900'
+                            }]
+                        }
+                    });
+                }
+
+                if (approvalRejectionData.length > 0) {
+                    new Chart(document.getElementById('approvalRejectionChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Approved', 'Declined'],
+                            datasets: [{
+                                data: approvalRejectionData,
+                                backgroundColor: ['#28a745', '#dc3545']
+                            }]
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error loading chart data:", error);
+            }
+        });
+    </script>
+    <!-- Chart.js scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+ <!-- Bootstrap & Chart.js -->
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<!-- Bootstrap JS Bundle (includes Popper.js, needed for dropdowns and collapses) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Include SweetAlert2 from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('logged_out') === 'true') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Logged Out',
+                text: 'You have been successfully logged out.',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
