@@ -1,13 +1,95 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Add New Employee</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success">Save Employee</button>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Cancel</a>
-    </form>
-</div>
+<h2>Add New Staff Member</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  <div>
+    {{ form.first_name.label_tag }}<br>
+    {{ form.first_name }}
+  </div>
+  <div>
+    {{ form.last_name.label_tag }}<br>
+    {{ form.last_name }}
+  </div>
+
+  <div>
+    {{ form.email.label_tag }}<br>
+    {{ form.email }}
+  </div>
+
+  <div>
+    {{ form.designation.label_tag }}<br>
+    {{ form.designation }}
+  </div>
+
+  <div>
+    {{ form.directorate.label_tag }}<br>
+    {{ form.directorate }}
+  </div>
+
+  <div>
+    {{ form.department.label_tag }} (optional)<br>
+    {{ form.department }}
+  </div> 
+
+
+  <button type="submit">Add Employee</button>
+</form>
+
+<script>
+  // Optional: Auto-filter departments based on directorate selection using JS
+  const directorateSelect = document.getElementById("id_directorate");
+  const departmentSelect = document.getElementById("id_department");
+
+  directorateSelect.addEventListener("change", function () {
+    const selectedDir = this.value;
+
+    fetch(`/api/departments/by_directorate/${selectedDir}/`)
+      .then(response => response.json())
+      .then(data => {
+        departmentSelect.innerHTML = '<option value="">---------</option>';
+        data.forEach(dep => {
+          const option = document.createElement("option");
+          option.value = dep.id;
+          option.textContent = dep.name;
+          departmentSelect.appendChild(option);
+        });
+      });
+  });
+</script>
+<script>
+  const designationField = document.getElementById("id_designation");
+  const directorateField = document.getElementById("id_directorate").closest("div");
+  const departmentField = document.getElementById("id_department").closest("div");
+
+  function toggleFields() {
+    const role = designationField.value;
+
+    if (role === "Director") {
+      directorateField.style.display = "block";
+      departmentField.style.display = "none";
+    } else if (role === "") {
+      directorateField.style.display = "none";
+      departmentField.style.display = "none";
+    } else {
+      directorateField.style.display = "block";
+      departmentField.style.display = "block";
+    }
+  }
+
+  // On page load + change
+  document.addEventListener("DOMContentLoaded", toggleFields);
+  designationField.addEventListener("change", toggleFields);
+</script>
+{% if success_message %}
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '{{ success_message|escapejs }}',
+        confirmButtonColor: '#3085d6'
+    });
+</script>
+{% endif %} 
 {% endblock %}

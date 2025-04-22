@@ -301,7 +301,6 @@ def get_department_reasons(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 @login_required
-
 def admin_dashboard(request):
     if not request.user.is_authenticated:
         return HttpResponse("You are not logged in. Please log in to access this page.", status=403)
@@ -373,7 +372,7 @@ def admin_dashboard(request):
         'total_visitors': total_visitors,
         'total_employees': total_employees,
         'pending_visits': pending_visits,
-        'most_visited_employee': most_visited_employee.name if most_visited_employee else "N/A",
+        'most_visited_employee': f"{most_visited_employee.first_name} {most_visited_employee.last_name}" if most_visited_employee else "N/A",
         'most_visited_department': most_visited_department.name if most_visited_department else "N/A",
         'visit_purpose_labels': json.dumps(visit_purpose_labels),
         'visit_purpose_data': json.dumps(visit_purpose_values),
@@ -410,7 +409,6 @@ def export_visits_csv(request):
 
     return response
 
-
 def export_visits_pdf(request):
 
     start_date = request.GET.get('start_date')
@@ -443,15 +441,35 @@ def export_visits_pdf(request):
 
 @login_required(login_url='login')
 def add_employee(request):
-    if request.method == "POST":
+    success_message = request.session.pop('employee_success', None)  # Always check at top
+
+    if request.method == 'POST':
         form = EmployeeForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('admin_dashboard')  # Redirect to the dashboard after saving
+            employee = form.save()
+            request.session['employee_success'] = 'Employee added successfully!'
+            
+            # Automatically assign roles based on designation
+            if employee.designation == 'Director' and employee.directorate:
+                employee.directorate.director = employee
+                employee.directorate.save()
+            elif employee.designation == 'Senior Manager' and employee.department:
+                employee.department.senior_manager = employee
+                employee.department.save()
+
+            return redirect('add_employee')  # redirect to prevent form re-submission
     else:
         form = EmployeeForm()
-    
-    return render(request, "admin_add_employee.html", {"form": form})
+
+    return render(request, 'admin_add_employee.html', {
+        'form': form,
+        'success_message': success_message
+    })
+
+def departments_by_directorate(request, directorate_id):
+    departments = Department.objects.filter(directorate_id=directorate_id)
+    data = [{'id': d.id, 'name': d.name} for d in departments]
+    return JsonResponse(data, safe=False)
 
 @shared_task
 def send_reminder_email(visit_log_id, iteration=1, max_reminders=5):
@@ -508,7 +526,6 @@ def process_reminders():
 
                 send_employee_notification_email(visit)  # Re-use your current email logic
 
-
 # Corrected code to trigger the task after getting the VisitLog instance
 def some_view(request):
     visitlog_id = 1  # Example of how you might get this dynamically, for example from a GET request
@@ -533,7 +550,6 @@ def send_approval_email(visitor_email, employee_email):
 def login_redirect(request):
     return redirect("admin_dashboard")  # Redirect to the admin dashboard after login
 
-
 def logout_view(request):
     logout(request)
     return redirect('/accounts/login/?logged_out=true')
@@ -542,17 +558,6 @@ def employee_list(request):
     employees = Employee.objects.select_related('department').all()
     return render(request, 'employee_list.html', {'employees': employees})
 
-# # Create
-# def employee_create(request):
-#     if request.method == 'POST':
-#         form = EmployeeForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('employee_list')
-#     else:
-#         form = EmployeeForm()
-#     return render(request, 'employee_form.html', {'form': form, 'action': 'Add'})
-
 # Edit
 def employee_edit(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
@@ -560,6 +565,7 @@ def employee_edit(request, pk):
         form = EmployeeForm(request.POST, instance=employee)
         if form.is_valid():
             form.save()
+            request.session['employee_success'] = 'Employee added successfully!'
             return redirect('employee_list')
     else:
         form = EmployeeForm(instance=employee)
@@ -570,5 +576,8 @@ def employee_delete(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
         employee.delete()
+        request.session['employee_success'] = 'Employee deleted successfully!'
+
         return redirect('employee_list')
     return render(request, 'employee_confirm_delete.html', {'employee': employee})
+

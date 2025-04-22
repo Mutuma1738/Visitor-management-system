@@ -37,5 +37,6 @@ urlpatterns = [
     path('employees/', views.employee_list, name='employee_list'),
     path('employees/<int:pk>/edit/', views.employee_edit, name='employee_edit'),
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+    path('api/departments/by_directorate/<int:directorate_id>/', views.departments_by_directorate),    
 ]
 

@@ -5,8 +5,26 @@
     <p>Are you sure you want to delete {{ employee.name }}?</p>
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Delete</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ emp.pk }}')">Delete</button>
         <a href="{% url 'employee_list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+<script>
+    function confirmDelete(empId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/employee/delete/${empId}/`; // Adjust URL pattern if needed
+            }
+        })
+    }
+</script>
+
 {% endblock %}
