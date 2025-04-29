@@ -1,9 +1,38 @@
 {% extends 'base.html' %}
+
 {% block content %}
+
+<!-- ✅ Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Employee System</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary ms-2" href="{% url 'add_employee' %}">Add Employee</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ✅ Main Container -->
 <div class="container mt-4">
-    <h2>Employee Management</h2>
-    <a href="{% url 'add_employee' %}" class="btn btn-primary mb-3">Add New Employee</a>
-    <table class="table table-bordered">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Employee Management</h2>
+
+        <!-- 🔎 Search Bar (right side!) -->
+        <input type="text" id="employeeSearch" class="form-control w-25" placeholder="Search employees...">
+    </div>
+
+    <table class="table table-bordered" id="employeeTable">
         <thead>
             <tr>
                 <th>First_name</th>
@@ -33,4 +62,47 @@
         </tbody>
     </table>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('employeeSearch');
+    const rows = document.querySelectorAll('#employeeTable tbody tr');
+    let alertShown = false;  // Track if alert has already been shown
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        let found = false;
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            if (rowText.includes(query)) {
+                row.style.display = '';
+                found = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (!found && query.length > 0 && !alertShown) {
+            Swal.fire({
+                icon: 'info',
+                title: 'No Employees Found',
+                text: `No employees match "${query}".`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            alertShown = true; // Mark that alert has been shown
+        }
+
+        if (found) {
+            alertShown = false; // Reset if search matches again
+        }
+    });
+});
+</script>
 {% endblock %}
