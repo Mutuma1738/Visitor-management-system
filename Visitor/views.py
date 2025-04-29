@@ -288,19 +288,21 @@ def get_department_reasons(request):
 
     try:
         employee = get_object_or_404(Employee, id=employee_id)
-        
-        if not employee.department:
-            return JsonResponse({"error": "Employee has no department"}, status=404)
 
-        # Fetch official reasons from the department
-        reasons = employee.department.official_reasons  # JSONField stores a list
+        if employee.department:
+            # Fetch reasons from the department
+            reasons = employee.department.official_reasons
+        elif employee.directorate and not employee.department:
+            # Fetch reasons directly from the directorate
+            reasons = employee.directorate.official_reasons
+        else:
+            return JsonResponse({"error": "No department or directorate found for employee"}, status=404)
 
         return JsonResponse({"reasons": reasons})
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-@login_required
+        return JsonResponse({"error": str(e)}, status=500)@login_required
+        
 def admin_dashboard(request):
     if not request.user.is_authenticated:
         return HttpResponse("You are not logged in. Please log in to access this page.", status=403)
