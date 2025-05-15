@@ -1,71 +1,86 @@
 {% extends "base.html" %}
 
+{% block title %}Visitor Registration / Log Visit{% endblock %}
 {% block content %}
-    <div class="container mt-5">
-        <div class="card shadow-lg p-4">
-            <h2 class="text-center mb-4">Visitor Registration / Log Visit</h2>
-            <form method="POST">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label for="Id_number" class="form-label">ID Number:</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="Id_number" id="Id_number" required value="{{ visitor.Id_number|default:'' }}">
-                        <button type="button" class="btn btn-primary" id="check-Id-btn" name="check_Id">Check ID</button>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="name" class="form-label">Name:</label>
-                    <input type="text" class="form-control" name="name" id="name" required readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email:</label>
-                    <input type="email" class="form-control" name="email" id="email" required readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="mobile" class="form-label">Mobile:</label>
-                    <input type="text" class="form-control" name="mobile" id="mobile" required readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="employee" class="form-label">Employee to Visit:</label>
-                    <select class="form-select" name="employee" id="employee">
-                        {% for emp in employees %}
-                            <option value="{{ emp.id }}">{{ emp.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="purpose" class="form-label">Purpose of Visit:</label>
-                    <select class="form-select" name="purpose" id="purpose">
-                        <option value="Personal">Personal</option>
-                        <option value="Official">Official</option>
-                    </select>
-                </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-                <!-- Official Reason Dropdown (Initially Hidden) -->
-                <div id="reason-container" class="mb-3 d-none">
-                    <label for="official_reason" class="form-label">Official Reason:</label>
-                    <select class="form-select" name="official_reason" id="official_reason">
-                        <option value="">Select a reason</option>
-                    </select>
-                </div>
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h2 class="text-center mb-4">Visitor Registration / Log Visit</h2>
+        <form method="POST" id="logVisitForm">
+            {% csrf_token %}
 
-                <!-- Other Reason Input Field (Initially Hidden) -->
-                <div id="other-reason-container" class="mb-3 d-none">
-                    <label for="other_reason" class="form-label">Other Reason:</label>
-                    <input type="text" class="form-control" name="other_reason" id="other_reason">
+            <div class="mb-3">
+                <label for="Id_number" class="form-label">ID Number:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" name="Id_number" id="Id_number" required value="{{ visitor.Id_number|default:'' }}">
+                    <button type="button" class="btn btn-primary" id="check-Id-btn" name="check_Id">Check ID</button>
                 </div>
-                <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            </div>
 
-                <button type="submit" class="btn btn-success w-100" name="submit_visit" id="submit-btn">Submit Visit</button>
-            </form>
-        </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <input type="text" class="form-control" name="name" id="name" required readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <input type="email" class="form-control" name="email" id="email" optional readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="mobile" class="form-label">Mobile:</label>
+                <input type="text" class="form-control" name="mobile" id="mobile" required readonly>
+            </div>
+
+            <div class="mb-3">
+                <label for="employee" class="form-label">Employee to Visit:</label>
+                <select class="form-select" name="employee" id="employee">
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="purpose" class="form-label">Purpose of Visit:</label>
+                <select class="form-select" name="purpose" id="purpose">
+                    <option value="Personal">Personal</option>
+                    <option value="Official">Official</option>
+                </select>
+            </div>
+
+            <div id="reason-container" class="mb-3 d-none">
+                <label for="official_reason" class="form-label">Official Reason:</label>
+                <select class="form-select" name="official_reason" id="official_reason">
+                    <option value="">Select a reason</option>
+                </select>
+            </div>
+
+            <div id="other-reason-container" class="mb-3 d-none">
+                <label for="other_reason" class="form-label">Other Reason:</label>
+                <input type="text" class="form-control" name="other_reason" id="other_reason">
+            </div>
+
+            <button type="submit" class="btn btn-success w-100" name="submit_visit" id="submit-btn">
+                <span class="btn-text">Submit Visit</span>
+                <span class="btn-spinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Logging...
+                </span>
+            </button>
+        </form>
     </div>
-    
-    {% endblock %}
-    
+</div>
+
+<script>
+    document.getElementById("logVisitForm").addEventListener("submit", function () {
+        const button = document.getElementById("submit-btn");
+        const text = button.querySelector(".btn-text");
+        const spinner = button.querySelector(".btn-spinner");
+
+        button.disabled = true;
+        text.style.display = "none";
+        spinner.style.display = "inline-block";
+    });
+</script>
+{% endblock %}
