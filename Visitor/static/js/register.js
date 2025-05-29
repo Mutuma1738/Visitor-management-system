@@ -57,59 +57,70 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error fetching visitor data:", error));
     });
 
+   
     form.addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevent default form submission
-        const action = submitBtn.getAttribute("data-action");
-        const csrfToken = getCSRFToken(); // Get CSRF token
+    event.preventDefault();
+    const action = submitBtn.getAttribute("data-action");
+    const csrfToken = getCSRFToken();
 
-        if (!csrfToken) {
-            alert("CSRF token missing! Please refresh the page.");
-            return;
-        }
-
-        if (action === "register") {
-            fetch("/register/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": csrfToken // Include CSRF token
-                },
-                body: JSON.stringify({
-                    Id_number: IdInput.value,
-                    name: nameInput.value,
-                    mobile: mobileInput.value
-                })
+    if (action === "register") {
+        fetch("/register/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({
+                Id_number: IdInput.value,
+                name: nameInput.value,
+                mobile: mobileInput.value
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    swal("Error!", data.error, "error");
-                } else {
-                    swal("Success!", "Visitor registered successfully!", "success");
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                swal("Error!", data.error, "error");
+            } else {
+                swal("Success!", "Visitor registered successfully!", "success").then(() => {
                     submitBtn.innerText = "Log Visit";
                     submitBtn.setAttribute("data-action", "log");
-                }
-            })
-            .catch(error => console.error("Error registering visitor:", error));
-        } else if (action === "log") {
-            let formData = new FormData(form); // Get all form data
+                    submitBtn.disabled = false; // Ensure the button is enabled
 
-            fetch("/log_visit/", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrfToken // CSRF token in headers
-                },
-                body: formData // Send as FormData, not JSON
-            })
-            .then(response => {
-                if (response.ok) {
-                    swal("Success!", "Visit logged successfully!", "success")
-                        .then(() => window.location.reload());
-                } else {
-                    return response.json().then(data => { throw new Error(data.error); });
-                }
-            })
-            .catch(error => console.error("Error logging visit:", error));
-        }
+                });
+            }
+        })
+        .catch(error => console.error("Error registering visitor:", error));
+    }
+    // ... other code for "log" actionyyy
+
+    else if (action === "log") {
+        let formData = new FormData(form);
+    
+        fetch("/log_visit/", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Request failed");
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                swal("Success!", data.message, "success").then(() => {
+                    window.location.href = "/";
+                });
+            } else {
+                swal("Error!", data.message || "Unknown error", "error");
+            }
+        })
+        .catch(error => {
+            console.error("Log visit error:", error);
+            swal("Error!", "Something went wrong while logging the visit.", "error");
+        });
+    }
+    
     });
 });
