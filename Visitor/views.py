@@ -95,60 +95,66 @@ def send_smtp_email(to_email, subject, message):
 
 def log_visit(request):
     """Log a visit and notify the chosen employee via email."""
-    if request.method == "POST":
-        Id_number = request.POST.get("Id_number")
-        visitor = Visitor.objects.filter(Id_number=Id_number).first()
-        if not visitor:
-            return redirect('home')
+    try:
+        if request.method == "POST":
+            Id_number = request.POST.get("Id_number")
+            visitor = Visitor.objects.filter(Id_number=Id_number).first()
+            if not visitor:
+                return redirect('home')
 
-        employee_id = request.POST.get("employee")
-        purpose = request.POST.get("purpose")
-        official_reason = request.POST.get("official_reason", "").strip()
-        other_reason = request.POST.get("other_reason", "").strip()
-        description = other_reason if other_reason else official_reason
+            employee_id = request.POST.get("employee")
+            purpose = request.POST.get("purpose")
+            official_reason = request.POST.get("official_reason", "").strip()
+            other_reason = request.POST.get("other_reason", "").strip()
+            description = other_reason if other_reason else official_reason
 
-        try:
-            employee = Employee.objects.get(id=employee_id)
-        except Employee.DoesNotExist:
-            return JsonResponse({"error": "Selected employee not found."}, status=400)
+            try:
+                employee = Employee.objects.get(id=employee_id)
+            except Employee.DoesNotExist:
+                return JsonResponse({"error": "Selected employee not found."}, status=400)
 
-        # Create a new visit log entry
-        visit_log = VisitLog.objects.create(
-            visitor=visitor,
-            employee=employee,
-            purpose=purpose,
-            description=description,
-            status="Pending",
-            arrival_time=timezone.now()  # Sets the arrival time to the current time
+            # Create a new visit log entry
+            visit_log = VisitLog.objects.create(
+                visitor=visitor,
+                employee=employee,
+                purpose=purpose,
+                description=description,
+                status="Pending",
+                arrival_time=timezone.now()  # Sets the arrival time to the current time
 
-        )
+            )
 
-        # Send initial email to the employee with options
-        message = f"""
-        Dear {employee.name},<br><br>
-        You have a new visit request from {visitor.name} ({visitor.Id_number}).<br>
-        <strong>Purpose:</strong> {purpose}<br>
-        <strong>Description:</strong> {visit_log.description}<br><br>
-        
-        Kindly advise on this request <br>
-        <a href="http://127.0.0.1:8000/update_status/{visit_log.id}/?status=Approved">✅ Approve</a> |
-        <a href="http://127.0.0.1:8000/update_status/{visit_log.id}/?status=Declined">❌ Decline</a> |
-        <a href="http://127.0.0.1:8000/forward_visit/{visit_log.id}/">🔄 Forward</a><br><br>
-        
-        Best regards,<br>
-        Insurance Regulatory Authority
-        """
-        send_smtp_email(employee.email, "New Visit Request", message)
+            # Send initial email to the employee with options
+            message = f"""
+            Dear {employee.first_name}{employee.last_name},<br><br>
+            You have a new visit request from {visitor.name} ({visitor.Id_number}).<br>
+            <strong>Purpose:</strong> {purpose}<br>
+            <strong>Description:</strong> {visit_log.description}<br><br>
+            
+            Kindly advise on this request <br>
+            <a href="http://10.25.5.47:8000/update_status/{visit_log.id}/?status=Approved">✅ Approve</a> |
+            <a href="http://10.25.5.47:8000/update_status/{visit_log.id}/?status=Declined">❌ Decline</a> |
+            <a href="http://10.25.5.47:8000/forward_visit/{visit_log.id}/">🔄 Forward</a><br><br>
+            
+            Best regards,<br>
+            Insurance Regulatory Authority
+            """
+            send_smtp_email(employee.email, "New Visit Request", message)
 
-        # Schedule the reminder task to run 10 minutes later
-        # After logging visit
-        send_reminder_email.apply_async(
-            args=[visit_log.id, 1, 5],  # start with iteration 1, max 5 reminders
-            countdown=60
-)
+            # Schedule the reminder task to run 10 minutes later
+            # After logging visit
+            # send_reminder_email.apply_async(
+            #     args=[visit_log.id, 1, 5],  # start with iteration 1, max 5 reminders
+            #     countdown=60
+            # )
 
 
-        return redirect('home')
+        # return redirect('home')
+        return JsonResponse({'success': True, 'message': 'Visit logged successfully'})
+    except Exception as e:
+            print("❌ Error in log_visit:", e)
+            traceback.print_exc()
+            return JsonResponse({'success': False, 'message': 'Internal server error'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
