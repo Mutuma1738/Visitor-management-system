@@ -37,7 +37,7 @@
                 <label for="employee" class="form-label">Employee to Visit:</label>
                 <select class="form-select" name="employee" id="employee">
                     {% for emp in employees %}
-                        <option value="{{ emp.id }}">{{ emp.name }}</option>
+                        <option value="{{ emp.id }}">{{ emp.first_name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -73,7 +73,10 @@
 </div>
 
 <script>
-    document.getElementById("logVisitForm").addEventListener("submit", function () {
+    document.getElementById("logVisitForm").addEventListener("submit", function (e) {
+        e.preventDefault(); // Prevent immediate form submission
+
+        const form = this;
         const button = document.getElementById("submit-btn");
         const text = button.querySelector(".btn-text");
         const spinner = button.querySelector(".btn-spinner");
@@ -81,6 +84,12 @@
         button.disabled = true;
         text.style.display = "none";
         spinner.style.display = "inline-block";
+
+        // Delay submission to show spinner
+        setTimeout(() => {
+            form.submit();
+        }, 600);  // adjust this delay as needed
     });
 </script>
+
 {% endblock %}
